@@ -13,6 +13,9 @@ import (
 	"github.com/infodancer/session-manager/internal/config"
 	"github.com/infodancer/session-manager/internal/grpcserver"
 	"github.com/infodancer/session-manager/internal/manager"
+
+	// Register storage drivers used by the domain provider.
+	_ "github.com/infodancer/msgstore/maildir"
 )
 
 func main() {
