@@ -25,8 +25,13 @@ type Info struct {
 //
 // Resolution order (highest priority wins):
 //   - GID:      postmaster file > config.toml
-//   - BasePath: postmaster file DataPath > config.toml MsgStore.BasePath > domainDir/users
-func Lookup(domainsPath, localpart, domainName string) (*Info, error) {
+//   - BasePath: postmaster file DataPath > domainsDataPath/domain > domainDir/users
+//
+// domainsDataPath, if non-empty, is used to resolve relative MsgStore.BasePath
+// values — matching the behaviour of FilesystemDomainProvider.WithDataPath.
+// The postmaster file (if present) takes priority over domainsDataPath.
+// Credential backend paths are always resolved relative to domainsPath.
+func Lookup(domainsPath, domainsDataPath, localpart, domainName string) (*Info, error) {
 	domainDir := filepath.Join(domainsPath, domainName)
 
 	cfg, err := domain.LoadDomainConfig(filepath.Join(domainDir, "config.toml"))
@@ -52,8 +57,13 @@ func Lookup(domainsPath, localpart, domainName string) (*Info, error) {
 
 	gid := cfg.Gid
 
-	// Resolve mail-session basePath (default: relative "users" under domain dir).
+	// Resolve mail-session basePath (default: "users").
+	// Priority: postmaster DataPath > domainsDataPath+domain > domainDir.
 	storageBase := domainDir
+	if domainsDataPath != "" {
+		storageBase = filepath.Join(domainsDataPath, domainName)
+	}
+
 	base := cfg.MsgStore.BasePath
 	if base == "" {
 		base = "users"
