@@ -22,6 +22,10 @@ type Info struct {
 
 // Lookup resolves credentials for username (localpart@domain) using the
 // per-domain config and passwd files under domainsPath.
+//
+// Resolution order (highest priority wins):
+//   - GID:      postmaster file > config.toml
+//   - BasePath: postmaster file DataPath > config.toml MsgStore.BasePath > domainDir/users
 func Lookup(domainsPath, localpart, domainName string) (*Info, error) {
 	domainDir := filepath.Join(domainsPath, domainName)
 
@@ -46,13 +50,27 @@ func Lookup(domainsPath, localpart, domainName string) (*Info, error) {
 		return nil, fmt.Errorf("lookup uid for %q in %q: %w", localpart, passwdPath, err)
 	}
 
-	// Resolve mail-session basePath (default: "users").
+	gid := cfg.Gid
+
+	// Resolve mail-session basePath (default: relative "users" under domain dir).
+	storageBase := domainDir
 	base := cfg.MsgStore.BasePath
 	if base == "" {
 		base = "users"
 	}
+
+	// Postmaster file is authoritative for GID and data path.
+	if entry := domain.LookupDomainPostmaster(domainsPath, domainName); entry != nil {
+		if entry.GID != 0 {
+			gid = entry.GID
+		}
+		if entry.DataPath != "" {
+			storageBase = entry.DataPath
+		}
+	}
+
 	if !filepath.IsAbs(base) {
-		base = filepath.Join(domainDir, base)
+		base = filepath.Join(storageBase, base)
 	}
 
 	storeType := cfg.MsgStore.Type
@@ -62,7 +80,7 @@ func Lookup(domainsPath, localpart, domainName string) (*Info, error) {
 
 	return &Info{
 		UID:       uid,
-		GID:       cfg.Gid,
+		GID:       gid,
 		BasePath:  base,
 		StoreType: storeType,
 	}, nil
