@@ -3,7 +3,7 @@ module github.com/infodancer/session-manager
 go 1.26.1
 
 require (
-	github.com/infodancer/auth v0.1.11
+	github.com/infodancer/auth v0.1.13
 	github.com/infodancer/mail-session v0.1.2
 	github.com/infodancer/msgstore v0.2.2-0.20260303202932-60ef82df8079
 	github.com/pelletier/go-toml/v2 v2.2.4
