@@ -310,6 +310,7 @@ func (m *Manager) spawnSession(username, mailbox string) (*sessionEntry, error) 
 
 	args := []string{
 		"--mode=daemon",
+		"--idle-timeout=0",
 		"--socket=" + socketPath,
 		"--mailbox=" + mailbox,
 		"--type=" + creds.StoreType,
