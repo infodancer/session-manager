@@ -10,6 +10,7 @@ import (
 
 	pb "github.com/infodancer/mail-session/proto/mailsession/v1"
 	"github.com/infodancer/session-manager/internal/config"
+	"github.com/infodancer/session-manager/internal/metrics"
 )
 
 // mockClients are embedded interface stubs for sessionEntry fields.
@@ -23,6 +24,7 @@ type mockWatchClient struct{ pb.WatchServiceClient }
 func newTestManager(idleTimeout time.Duration) *Manager {
 	m := &Manager{
 		cfg:     &config.Config{IdleTimeout: idleTimeout},
+		metrics: &metrics.NoopCollector{},
 		byToken: make(map[string]*sessionEntry),
 		byUser:  make(map[string]*sessionEntry),
 	}
