@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/infodancer/logging"
 	"github.com/infodancer/session-manager/internal/certutil"
 	"github.com/infodancer/session-manager/internal/config"
 	"github.com/infodancer/session-manager/internal/grpcserver"
@@ -44,6 +45,9 @@ func runServe() {
 		slog.Error("load config", "error", err)
 		os.Exit(1)
 	}
+
+	logger := logging.NewLogger(cfg.LogLevel)
+	slog.SetDefault(logger)
 
 	if *socketPath != "" {
 		cfg.Socket = *socketPath
